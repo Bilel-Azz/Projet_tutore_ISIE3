@@ -1,3 +1,5 @@
+package com.mygdx.briquebreaker;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -10,7 +12,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-public class BrickBreakerGame extends ApplicationAdapter {
+public class BbMain extends ApplicationAdapter {
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
@@ -117,7 +119,11 @@ public class BrickBreakerGame extends ApplicationAdapter {
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLS; col++) {
                 if (bricks[row][col] != null) {
-                    if (ballPosition.overlaps(bricks[row][col])) {
+                    Rectangle brick = bricks[row][col];
+                    if (ballPosition.x < brick.x + brick.width &&
+                            ballPosition.x + 2 * BALL_RADIUS > brick.x &&
+                            ballPosition.y < brick.y + brick.height &&
+                            ballPosition.y + 2 * BALL_RADIUS > brick.y) {
                         bricks[row][col] = null;
                         score += 10;
                         ballVelocity.y *= -1;
