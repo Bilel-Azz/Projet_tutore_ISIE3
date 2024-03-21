@@ -13,6 +13,15 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class BbMain extends ApplicationAdapter {
+
+    // Déclarations de variables globales
+    private enum GameState { MENU, PLAYING }
+    private GameState gameState;
+    private BitmapFont menuFont;
+    private int selectedMenuItem;
+    private String[] menuItems;
+
+
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
@@ -32,8 +41,16 @@ public class BbMain extends ApplicationAdapter {
     private static final int BRICK_MARGIN = 5;
     private Rectangle[][] bricks;
 
+
     @Override
     public void create () {
+
+        // Initialisation des variables de menu
+        gameState = GameState.MENU;
+        menuFont = new BitmapFont();
+        menuFont.setColor(Color.WHITE);
+        selectedMenuItem = 0;
+        menuItems = new String[] { "Start Game", "Exit" };
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
@@ -58,6 +75,52 @@ public class BbMain extends ApplicationAdapter {
 
     @Override
     public void render () {
+
+        // Gestion de l'affichage en fonction de l'état du jeu
+        switch (gameState) {
+            case MENU:
+                renderMenu();
+                break;
+            case PLAYING:
+                renderGame();
+                break;
+        }
+    }
+    private void renderMenu() {
+        // Affichage du menu
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        batch.begin();
+
+        for (int i = 0; i < menuItems.length; i++) {
+            if (i == selectedMenuItem) {
+                menuFont.setColor(Color.RED);
+            } else {
+                menuFont.setColor(Color.WHITE);
+            }
+            menuFont.draw(batch, menuItems[i], 100, 400 - i * 50);
+        }
+
+        batch.end();
+
+        // Gestion des entrées du clavier pour naviguer dans le menu
+        if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
+            selectedMenuItem = Math.max(0, selectedMenuItem - 1);
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
+            selectedMenuItem = Math.min(menuItems.length - 1, selectedMenuItem + 1);
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            switch (selectedMenuItem) {
+                case 0:
+                    gameState = GameState.PLAYING;
+                    break;
+                case 1:
+                    Gdx.app.exit();
+                    break;
+            }
+        }
+    }
+
+    private void renderGame() {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
