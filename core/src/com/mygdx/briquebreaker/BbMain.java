@@ -12,6 +12,8 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+
+
 public class BbMain extends ApplicationAdapter {
 
     // Déclarations de variables globales
@@ -32,7 +34,7 @@ public class BbMain extends ApplicationAdapter {
     private int score;
     private static final int PADDLE_WIDTH = 100;
     private static final int PADDLE_HEIGHT = 20;
-    private static final int BALL_RADIUS = 10;
+    private static final int BALL_RADIUS = 7;
     private static final int BALL_SPEED = 5;
     private static final int BRICK_ROWS = 5;
     private static final int BRICK_COLS = 10;
@@ -59,16 +61,16 @@ public class BbMain extends ApplicationAdapter {
         font = new BitmapFont();
         font.setColor(Color.WHITE);
 
-        paddle = new Rectangle((Gdx.graphics.getWidth() - PADDLE_WIDTH) / 2, 20, PADDLE_WIDTH, PADDLE_HEIGHT);
+        paddle = new Paddle((Gdx.graphics.getWidth() - PADDLE_WIDTH) / 2, 20, PADDLE_WIDTH, PADDLE_HEIGHT);
         ballPosition = new Vector2(Gdx.graphics.getWidth() / 2, PADDLE_HEIGHT + BALL_RADIUS * 2);
         ballVelocity = new Vector2(BALL_SPEED, BALL_SPEED);
 
         bricks = new Rectangle[BRICK_ROWS][BRICK_COLS];
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLS; col++) {
-                bricks[row][col] = new Rectangle(col * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN,
+                bricks[row][col] = new Brick(col * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN,
                         Gdx.graphics.getHeight() - (row + 1) * (BRICK_HEIGHT + BRICK_MARGIN),
-                        BRICK_WIDTH, BRICK_HEIGHT);
+                        BRICK_WIDTH, BRICK_HEIGHT,3);
             }
         }
     }
@@ -139,7 +141,9 @@ public class BbMain extends ApplicationAdapter {
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLS; col++) {
                 if (bricks[row][col] != null) {
-                    shapeRenderer.rect(bricks[row][col].x, bricks[row][col].y, bricks[row][col].width, bricks[row][col].height);
+                    Brick brick = (Brick) bricks[row][col];
+                    shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
+                    shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
                 }
             }
         }
@@ -182,18 +186,38 @@ public class BbMain extends ApplicationAdapter {
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLS; col++) {
                 if (bricks[row][col] != null) {
-                    Rectangle brick = bricks[row][col];
+                    Brick brick = (Brick) bricks[row][col];
                     if (ballPosition.x < brick.x + brick.width &&
                             ballPosition.x + 2 * BALL_RADIUS > brick.x &&
                             ballPosition.y < brick.y + brick.height &&
                             ballPosition.y + 2 * BALL_RADIUS > brick.y) {
-                        bricks[row][col] = null;
-                        score += 10;
-                        ballVelocity.y *= -1;
+
+                        // Determine side of collision
+                        float ballCenterX = ballPosition.x + BALL_RADIUS;
+                        float ballCenterY = ballPosition.y + BALL_RADIUS;
+                        boolean isHorizontalCollision = Math.abs(ballCenterY - (brick.y + BRICK_HEIGHT / 2)) < BALL_RADIUS + BRICK_HEIGHT / 2;
+                        //boolean isVerticalCollision = Math.abs(ballCenterX - (brick.x + BRICK_WIDTH / 2)) < BALL_RADIUS + BRICK_WIDTH / 2;
+
+                        if (isHorizontalCollision) {
+                            // Reverse vertical velocity
+                            ballVelocity.y *= -1;
+                        }
+                        //if (isVerticalCollision) {
+                            // Reverse horizontal velocity
+                            //ballVelocity.x *= -1; 
+                        //}
+
+                        // Reduce durability
+                        brick.reduceDurability();
+                        if (brick.getDurability() <= 0) {
+                            bricks[row][col] = null; // Remove brick if durability is zero
+                            score += 10;
+                        }
                     }
                 }
             }
         }
+
     }
 
     @Override
