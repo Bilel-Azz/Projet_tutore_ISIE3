@@ -12,6 +12,13 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import java.util.Iterator;
+
+import static com.badlogic.gdx.math.MathUtils.random;
+
 
 
 public class BbMain extends ApplicationAdapter {
@@ -24,12 +31,15 @@ public class BbMain extends ApplicationAdapter {
     private String[] menuItems;
 
 
+    private List<Ball> Balls;
+
+
+
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
     private Rectangle paddle;
-    private Vector2 ballPosition;
-    private Vector2 ballVelocity;
+  
     private BitmapFont font;
     private int score;
     private static final int PADDLE_WIDTH = 100;
@@ -41,6 +51,7 @@ public class BbMain extends ApplicationAdapter {
     private static final int BRICK_WIDTH = 50;
     private static final int BRICK_HEIGHT = 20;
     private static final int BRICK_MARGIN = 5;
+
     private Rectangle[][] bricks;
 
 
@@ -61,16 +72,21 @@ public class BbMain extends ApplicationAdapter {
         font = new BitmapFont();
         font.setColor(Color.WHITE);
 
+        Balls = new ArrayList<Ball>();
+
         paddle = new Paddle((Gdx.graphics.getWidth() - PADDLE_WIDTH) / 2, 20, PADDLE_WIDTH, PADDLE_HEIGHT);
-        ballPosition = new Vector2(Gdx.graphics.getWidth() / 2, PADDLE_HEIGHT + BALL_RADIUS * 2);
-        ballVelocity = new Vector2(BALL_SPEED, BALL_SPEED);
+
+        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
+        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
+
+
 
         bricks = new Rectangle[BRICK_ROWS][BRICK_COLS];
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLS; col++) {
                 bricks[row][col] = new Brick(col * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN,
                         Gdx.graphics.getHeight() - (row + 1) * (BRICK_HEIGHT + BRICK_MARGIN),
-                        BRICK_WIDTH, BRICK_HEIGHT,3);
+                        BRICK_WIDTH, BRICK_HEIGHT,1);
             }
         }
     }
@@ -136,7 +152,9 @@ public class BbMain extends ApplicationAdapter {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(Color.WHITE);
         shapeRenderer.rect(paddle.x, paddle.y, paddle.width, paddle.height);
-        shapeRenderer.circle(ballPosition.x, ballPosition.y, BALL_RADIUS);
+        for (Ball ball : Balls) {
+            shapeRenderer.circle(ball.position.x, ball.position.y, BALL_RADIUS);
+        }
 
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLS; col++) {
@@ -164,61 +182,107 @@ public class BbMain extends ApplicationAdapter {
         }
     }
 
+    public void newBall() {
+        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
+    }
+
+    public void newBall(float x, float y) {
+        Balls.add(new Ball(x, y, BALL_SPEED, BALL_SPEED));
+    }
+
     private void update() {
-        // Update ball position
-        ballPosition.x += ballVelocity.x;
-        ballPosition.y += ballVelocity.y;
+        Iterator<Ball> iterator = Balls.iterator();
+        while (iterator.hasNext()) {
+            Ball ball = iterator.next();
 
-        // Check collision with paddle
-        if (ballPosition.y - BALL_RADIUS < paddle.y + paddle.height && ballPosition.x > paddle.x && ballPosition.x < paddle.x + paddle.width) {
-            ballVelocity.y *= -1;
-        }
+            // Update ball position
+            ball.position.x += ball.velocity.x;
+            ball.position.y += ball.velocity.y;
 
-        // Check collision with walls
-        if (ballPosition.x < 0 || ballPosition.x > Gdx.graphics.getWidth()) {
-            ballVelocity.x *= -1;
-        }
-        if (ballPosition.y < 0 || ballPosition.y > Gdx.graphics.getHeight()) {
-            ballVelocity.y *= -1;
-        }
+            // Check collision with paddle
+            if (ball.position.y - BALL_RADIUS < paddle.y + paddle.height && ball.position.x > paddle.x && ball.position.x < paddle.x + paddle.width) {
+                ball.velocity.y *= -1;
+            }
 
-        // Check collision with bricks
-        for (int row = 0; row < BRICK_ROWS; row++) {
-            for (int col = 0; col < BRICK_COLS; col++) {
-                if (bricks[row][col] != null) {
-                    Brick brick = (Brick) bricks[row][col];
-                    if (ballPosition.x < brick.x + brick.width &&
-                            ballPosition.x + 2 * BALL_RADIUS > brick.x &&
-                            ballPosition.y < brick.y + brick.height &&
-                            ballPosition.y + 2 * BALL_RADIUS > brick.y) {
+            // Check collision with walls
+            if (ball.position.x < 0 || ball.position.x > Gdx.graphics.getWidth()) {
+                ball.velocity.x *= -1;
+            }
+            if (ball.position.y < 0 || ball.position.y > Gdx.graphics.getHeight()) {
+                ball.velocity.y *= -1;
+            }
 
-                        // Determine side of collision
-                        float ballCenterX = ballPosition.x + BALL_RADIUS;
-                        float ballCenterY = ballPosition.y + BALL_RADIUS;
-                        boolean isHorizontalCollision = Math.abs(ballCenterY - (brick.y + BRICK_HEIGHT / 2)) < BALL_RADIUS + BRICK_HEIGHT / 2;
-                        //boolean isVerticalCollision = Math.abs(ballCenterX - (brick.x + BRICK_WIDTH / 2)) < BALL_RADIUS + BRICK_WIDTH / 2;
+            // Check collision with bricks
+            for (int row = 0; row < BRICK_ROWS; row++) {
+                for (int col = 0; col < BRICK_COLS; col++) {
+                    if (bricks[row][col] != null) {
+                        Brick brick = (Brick) bricks[row][col];
+                        if (ball.position.x < brick.x + brick.width &&
+                                ball.position.x + 2 * BALL_RADIUS > brick.x &&
+                                ball.position.y < brick.y + brick.height &&
+                                ball.position.y + 2 * BALL_RADIUS > brick.y) {
 
-                        if (isHorizontalCollision) {
-                            // Reverse vertical velocity
-                            ballVelocity.y *= -1;
-                        }
-                        //if (isVerticalCollision) {
-                            // Reverse horizontal velocity
-                            //ballVelocity.x *= -1; 
-                        //}
+                            // Determine side of collision
+                            float ballCenterX = ball.position.x + BALL_RADIUS;
+                            float ballCenterY = ball.position.y + BALL_RADIUS;
+                            boolean isHorizontalCollision = Math.abs(ballCenterY - (brick.y + BRICK_HEIGHT / 2)) < BALL_RADIUS + BRICK_HEIGHT / 2;
+                            boolean isVerticalCollision = Math.abs(ballCenterX - (brick.x + BRICK_WIDTH / 2)) < BALL_RADIUS + BRICK_WIDTH / 2;
 
-                        // Reduce durability
-                        brick.reduceDurability();
-                        if (brick.getDurability() <= 0) {
-                            bricks[row][col] = null; // Remove brick if durability is zero
-                            score += 10;
+                            if (isHorizontalCollision) {
+                                // Reverse vertical velocity
+                                ball.velocity.y *= -1;
+                            }
+                            if (isVerticalCollision) {
+                                // Reverse horizontal velocity
+                                ball.velocity.x *= -1;
+                            }
+
+                            // Reduce durability
+                            brick.reduceDurability();
+                            if (brick.getDurability() <= 0) {
+                                bricks[row][col] = null; // Remove brick if durability is zero
+                                score += 10;
+                            }
+
+                            // Gestion des bonus
+                            if (brick.getBonus() == 1 && brick.getDurability() <= 0) {
+                                // Ajout d'un bonus
+                                // Exemple : augmentation de la taille de la raquette
+                                switch (random.nextInt(5)) {
+                                    case 1:
+                                        paddle.width += 20;
+                                        break;
+                                    case 2:
+                                        paddle.width -= 20;
+                                        break;
+                                    case 3:
+                                        ball.velocity.x *= 1.5;
+                                        ball.velocity.y *= 1.5;
+                                        break;
+                                    case 4:
+                                        ball.velocity.x *= 0.5;
+                                        ball.velocity.y *= 0.5;
+                                        break;
+                                    //case 5:
+                                        // Bonus pour créer une balle supplémentaire
+                                        //newBall(ball.position.x+1, ball.position.y-1);
+                                       // break;
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
 
+            // Remove ball if it's out of bounds
+            if (ball.position.y < -BALL_RADIUS || ball.position.y > Gdx.graphics.getHeight() + BALL_RADIUS) {
+                iterator.remove();
+            }
+        }
     }
+
+
+
 
     @Override
     public void dispose () {
