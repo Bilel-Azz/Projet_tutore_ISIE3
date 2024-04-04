@@ -12,34 +12,30 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import java.util.Iterator;
-
-import static com.badlogic.gdx.math.MathUtils.random;
-
 
 
 public class BbMain extends ApplicationAdapter {
 
     // Déclarations de variables globales
-    private enum GameState { MENU, PLAYING }
+    private enum GameState { MENU, PLAYING, GAME_OVER }
     private GameState gameState;
     private BitmapFont menuFont;
     private int selectedMenuItem;
     private String[] menuItems;
 
+    private boolean restartButtonClicked = false;
 
-    private List<Ball> Balls;
-
+    private String gameOverMessage;
+    private int gameOverScore;
+    private String gameOverButton;
 
 
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
     private Rectangle paddle;
-  
+    private Vector2 ballPosition;
+    private Vector2 ballVelocity;
     private BitmapFont font;
     private int score;
     private static final int PADDLE_WIDTH = 100;
@@ -51,13 +47,11 @@ public class BbMain extends ApplicationAdapter {
     private static final int BRICK_WIDTH = 50;
     private static final int BRICK_HEIGHT = 20;
     private static final int BRICK_MARGIN = 5;
-
     private Rectangle[][] bricks;
 
 
     @Override
     public void create () {
-
         // Initialisation des variables de menu
         gameState = GameState.MENU;
         menuFont = new BitmapFont();
@@ -72,29 +66,23 @@ public class BbMain extends ApplicationAdapter {
         font = new BitmapFont();
         font.setColor(Color.WHITE);
 
-        Balls = new ArrayList<Ball>();
-
         paddle = new Paddle((Gdx.graphics.getWidth() - PADDLE_WIDTH) / 2, 20, PADDLE_WIDTH, PADDLE_HEIGHT);
-
-        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
-        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
-
-
+        ballPosition = new Vector2(paddle.x + (paddle.width - BALL_RADIUS * 2) / 2, paddle.y + paddle.height + BALL_RADIUS * 2);
+        ballVelocity = new Vector2(BALL_SPEED, BALL_SPEED);
 
         bricks = new Rectangle[BRICK_ROWS][BRICK_COLS];
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLS; col++) {
                 bricks[row][col] = new Brick(col * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN,
                         Gdx.graphics.getHeight() - (row + 1) * (BRICK_HEIGHT + BRICK_MARGIN),
-                        BRICK_WIDTH, BRICK_HEIGHT,1);
+                        BRICK_WIDTH, BRICK_HEIGHT,3);
             }
         }
     }
 
-    @Override
-    public void render () {
 
-        // Gestion de l'affichage en fonction de l'état du jeu
+    @Override
+    public void render() {
         switch (gameState) {
             case MENU:
                 renderMenu();
@@ -102,8 +90,12 @@ public class BbMain extends ApplicationAdapter {
             case PLAYING:
                 renderGame();
                 break;
+            case GAME_OVER:
+                renderGameOver();
+                break;
         }
     }
+
     private void renderMenu() {
         // Affichage du menu
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -144,7 +136,7 @@ public class BbMain extends ApplicationAdapter {
 
         handleInput();
         update();
-        
+
         camera.update();
         batch.setProjectionMatrix(camera.combined);
         shapeRenderer.setProjectionMatrix(camera.combined);
@@ -152,9 +144,7 @@ public class BbMain extends ApplicationAdapter {
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(Color.WHITE);
         shapeRenderer.rect(paddle.x, paddle.y, paddle.width, paddle.height);
-        for (Ball ball : Balls) {
-            shapeRenderer.circle(ball.position.x, ball.position.y, BALL_RADIUS);
-        }
+        shapeRenderer.circle(ballPosition.x, ballPosition.y, BALL_RADIUS);
 
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLS; col++) {
@@ -173,115 +163,109 @@ public class BbMain extends ApplicationAdapter {
         batch.end();
     }
 
+    private void renderGameOver() {
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        batch.begin();
+
+        // Afficher le message de fin de partie
+        font.draw(batch, "Vous avez perdu", Gdx.graphics.getWidth() / 2 - 100, Gdx.graphics.getHeight() / 2 + 50);
+        font.draw(batch, "Score: " + gameOverScore, Gdx.graphics.getWidth() / 2 - 100, Gdx.graphics.getHeight() / 2);
+
+        batch.end();
+    }
+
+
     private void handleInput() {
         if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-            paddle.x -= 10;
+            if (paddle.x > 0) { // Vérifie que le pad ne dépasse pas le bord gauche
+                paddle.x -= 10;
+            }
         }
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            paddle.x += 10;
+            if (paddle.x + paddle.width < Gdx.graphics.getWidth()) { // Vérifie que le pad ne dépasse pas le bord droit
+                paddle.x += 10;
+            }
         }
-    }
-
-    public void newBall() {
-        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
-    }
-
-    public void newBall(float x, float y) {
-        Balls.add(new Ball(x, y, BALL_SPEED, BALL_SPEED));
     }
 
     private void update() {
-        Iterator<Ball> iterator = Balls.iterator();
-        while (iterator.hasNext()) {
-            Ball ball = iterator.next();
+        // Update ball position
+        ballPosition.x += ballVelocity.x;
+        ballPosition.y += ballVelocity.y;
 
-            // Update ball position
-            ball.position.x += ball.velocity.x;
-            ball.position.y += ball.velocity.y;
+        // Vérifier la collision avec le paddle
+        if (ballPosition.y - BALL_RADIUS < paddle.y + paddle.height && ballPosition.y + BALL_RADIUS > paddle.y &&
+                ballPosition.x + BALL_RADIUS > paddle.x && ballPosition.x - BALL_RADIUS < paddle.x + paddle.width) {
 
-            // Check collision with paddle
-            if (ball.position.y - BALL_RADIUS < paddle.y + paddle.height && ball.position.x > paddle.x && ball.position.x < paddle.x + paddle.width) {
-                ball.velocity.y *= -1;
-            }
+            // Inverser la composante y de la vélocité pour que la balle rebondisse vers le haut
+            ballVelocity.y *= -1;
+        }
 
-            // Check collision with walls
-            if (ball.position.x < 0 || ball.position.x > Gdx.graphics.getWidth()) {
-                ball.velocity.x *= -1;
-            }
-            if (ball.position.y < 0 || ball.position.y > Gdx.graphics.getHeight()) {
-                ball.velocity.y *= -1;
-            }
+        // Check collision with walls
+        if (ballPosition.x - BALL_RADIUS < 0 || ballPosition.x + BALL_RADIUS > Gdx.graphics.getWidth()) {
+            ballVelocity.x *= -1;
+        }
+        if (ballPosition.y + BALL_RADIUS > Gdx.graphics.getHeight()) {
+            ballVelocity.y *= -1;
+        }
 
-            // Check collision with bricks
-            for (int row = 0; row < BRICK_ROWS; row++) {
-                for (int col = 0; col < BRICK_COLS; col++) {
-                    if (bricks[row][col] != null) {
-                        Brick brick = (Brick) bricks[row][col];
-                        if (ball.position.x < brick.x + brick.width &&
-                                ball.position.x + 2 * BALL_RADIUS > brick.x &&
-                                ball.position.y < brick.y + brick.height &&
-                                ball.position.y + 2 * BALL_RADIUS > brick.y) {
+        // Check collision with bottom of the screen
+        if (ballPosition.y - BALL_RADIUS < 0) { // Vérifie si la balle est en dessous du bord inférieur de l'écran
+            // Définir les informations pour la fin de partie
+            gameOverMessage = "Vous avez perdu";
+            gameOverScore = score;
+            gameOverButton = "Relancer la partie";
 
-                            // Determine side of collision
-                            float ballCenterX = ball.position.x + BALL_RADIUS;
-                            float ballCenterY = ball.position.y + BALL_RADIUS;
-                            boolean isHorizontalCollision = Math.abs(ballCenterY - (brick.y + BRICK_HEIGHT / 2)) < BALL_RADIUS + BRICK_HEIGHT / 2;
-                            boolean isVerticalCollision = Math.abs(ballCenterX - (brick.x + BRICK_WIDTH / 2)) < BALL_RADIUS + BRICK_WIDTH / 2;
+            // Changer l'état du jeu en GAME_OVER
+            gameState = GameState.GAME_OVER;
 
-                            if (isHorizontalCollision) {
-                                // Reverse vertical velocity
-                                ball.velocity.y *= -1;
-                            }
-                            if (isVerticalCollision) {
-                                // Reverse horizontal velocity
-                                ball.velocity.x *= -1;
-                            }
+            // Réinitialiser les paramètres du jeu
+            score = 0; // Réinitialiser le score
+            ballPosition.set(Gdx.graphics.getWidth() / 2, PADDLE_HEIGHT + BALL_RADIUS * 2); // Réinitialiser la position de la balle
+            ballVelocity.set(BALL_SPEED, BALL_SPEED); // Réinitialiser la vitesse de la balle
+            bricks = new Rectangle[BRICK_ROWS][BRICK_COLS]; // Réinitialiser les briques
+        }
 
-                            // Reduce durability
-                            brick.reduceDurability();
-                            if (brick.getDurability() <= 0) {
-                                bricks[row][col] = null; // Remove brick if durability is zero
-                                score += 10;
-                            }
+        // Vérifier la collision avec les briques
+        for (int row = 0; row < BRICK_ROWS; row++) {
+            for (int col = 0; col < BRICK_COLS; col++) {
+                if (bricks[row][col] != null) {
+                    Brick brick = (Brick) bricks[row][col];
+                    if (ballPosition.x + BALL_RADIUS > brick.x && ballPosition.x - BALL_RADIUS < brick.x + brick.width &&
+                            ballPosition.y + BALL_RADIUS > brick.y && ballPosition.y - BALL_RADIUS < brick.y + brick.height) {
 
-                            // Gestion des bonus
-                            if (brick.getBonus() == 1 && brick.getDurability() <= 0) {
-                                // Ajout d'un bonus
-                                // Exemple : augmentation de la taille de la raquette
-                                switch (random.nextInt(5)) {
-                                    case 1:
-                                        paddle.width += 20;
-                                        break;
-                                    case 2:
-                                        paddle.width -= 20;
-                                        break;
-                                    case 3:
-                                        ball.velocity.x *= 1.5;
-                                        ball.velocity.y *= 1.5;
-                                        break;
-                                    case 4:
-                                        ball.velocity.x *= 0.5;
-                                        ball.velocity.y *= 0.5;
-                                        break;
-                                    //case 5:
-                                        // Bonus pour créer une balle supplémentaire
-                                        //newBall(ball.position.x+1, ball.position.y-1);
-                                       // break;
-                                }
-                            }
+                        // Détection de la collision
+                        if (ballVelocity.x > 0 && ballPosition.x - BALL_RADIUS < brick.x) {
+                            // Collision avec le côté gauche de la brique
+                            ballVelocity.x *= -1;
+                        } else if (ballVelocity.x < 0 && ballPosition.x + BALL_RADIUS > brick.x + brick.width) {
+                            // Collision avec le côté droit de la brique
+                            ballVelocity.x *= -1;
                         }
+                        if (ballVelocity.y > 0 && ballPosition.y - BALL_RADIUS < brick.y) {
+                            // Collision avec le côté supérieur de la brique
+                            ballVelocity.y *= -1;
+                        } else if (ballVelocity.y < 0 && ballPosition.y + BALL_RADIUS > brick.y + brick.height) {
+                            // Collision avec le côté inférieur de la brique
+                            ballVelocity.y *= -1;
+                        }
+
+                        // Réduction de la durabilité de la brique et mise à jour du score
+                        brick.reduceDurability();
+                        if (brick.getDurability() <= 0) {
+                            bricks[row][col] = null;
+                            score += 10;
+                        }
+
+                        // Sortir de la boucle pour éviter les collisions multiples avec la même brique
+                        break;
                     }
                 }
             }
-
-            // Remove ball if it's out of bounds
-            if (ball.position.y < -BALL_RADIUS || ball.position.y > Gdx.graphics.getHeight() + BALL_RADIUS) {
-                iterator.remove();
-            }
         }
     }
-
-
 
 
     @Override
