@@ -199,8 +199,15 @@ public class BbMain extends ApplicationAdapter {
         if (ballPosition.y - BALL_RADIUS < paddle.y + paddle.height && ballPosition.y + BALL_RADIUS > paddle.y &&
                 ballPosition.x + BALL_RADIUS > paddle.x && ballPosition.x - BALL_RADIUS < paddle.x + paddle.width) {
 
-            // Inverser la composante y de la vélocité pour que la balle rebondisse vers le haut
-            ballVelocity.y *= -1;
+            // Calculer le point de collision relatif à la largeur du paddle
+            float hitPosition = (ballPosition.x - paddle.x) / paddle.width;
+
+            // Modifier la vélocité en fonction du point de collision
+            ballVelocity.x = BALL_SPEED * (hitPosition - 0.5f) * 2;  // Ball_SPEED * [-1, 1] for left to right
+            ballVelocity.y *= -1; // Inverser la composante y de la vélocité
+
+            // Augmenter légèrement la vitesse de la balle
+            ballVelocity.scl(1.05f);
         }
 
         // Check collision with walls
