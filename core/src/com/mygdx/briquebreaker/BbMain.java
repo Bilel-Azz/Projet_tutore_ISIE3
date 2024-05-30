@@ -77,6 +77,8 @@ public class BbMain extends ApplicationAdapter {
 
         Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
 
+        bricks = new Rectangle[10][10];
+
 
 
 
@@ -156,6 +158,7 @@ public class BbMain extends ApplicationAdapter {
             for (int j = 0; j < brickDurability[0].length; j++) {
                 Brick brick = new Brick(j * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN, Gdx.graphics.getHeight() - (i + 1) * (BRICK_HEIGHT + BRICK_MARGIN), BRICK_WIDTH, BRICK_HEIGHT, brickDurability[i][j]);
                 bricks[i][j] = brick;
+                System.out.println("brickDurability[i][j] = " + brickDurability[i][j]);
                 shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
                 shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
 
@@ -163,26 +166,6 @@ public class BbMain extends ApplicationAdapter {
             }
         }
 
-//        // Affichage des briques
-//        for (int row = 0; row < BRICK_ROWS; row++) {
-//            for (int col = 0; col < BRICK_COLS; col++) {
-//                if (bricks[row][col] != null) {
-//                    Brick brick = (Brick) bricks[row][col];
-//                    shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
-//                    shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
-//                }
-//            }
-//        }
-
-//        for (int row = 0; row < BRICK_ROWS; row++) {
-//            for (int col = 0; col < BRICK_COLS; col++) {
-//                if (bricks[row][col] != null) {
-//                    Brick brick = (Brick) bricks[row][col];
-//                    shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
-//                    shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
-//                }
-//            }
-//        }
 
         shapeRenderer.end();
 
