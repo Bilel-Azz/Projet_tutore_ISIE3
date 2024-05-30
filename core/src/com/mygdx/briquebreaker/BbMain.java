@@ -46,8 +46,7 @@ public class BbMain extends ApplicationAdapter {
     private static final int PADDLE_HEIGHT = 20;
     private static final int BALL_RADIUS = 7;
     private static final int BALL_SPEED = 5;
-    private static final int BRICK_ROWS = 5;
-    private static final int BRICK_COLS = 10;
+
     private static final int BRICK_WIDTH = 50;
     private static final int BRICK_HEIGHT = 20;
     private static final int BRICK_MARGIN = 5;
@@ -77,18 +76,10 @@ public class BbMain extends ApplicationAdapter {
         paddle = new Paddle((Gdx.graphics.getWidth() - PADDLE_WIDTH) / 2, 20, PADDLE_WIDTH, PADDLE_HEIGHT);
 
         Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
-        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
 
 
 
-        bricks = new Rectangle[BRICK_ROWS][BRICK_COLS];
-        for (int row = 0; row < BRICK_ROWS; row++) {
-            for (int col = 0; col < BRICK_COLS; col++) {
-                bricks[row][col] = new Brick(col * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN,
-                        Gdx.graphics.getHeight() - (row + 1) * (BRICK_HEIGHT + BRICK_MARGIN),
-                        BRICK_WIDTH, BRICK_HEIGHT,1);
-            }
-        }
+
     }
 
     @Override
@@ -156,15 +147,42 @@ public class BbMain extends ApplicationAdapter {
             shapeRenderer.circle(ball.position.x, ball.position.y, BALL_RADIUS);
         }
 
-        for (int row = 0; row < BRICK_ROWS; row++) {
-            for (int col = 0; col < BRICK_COLS; col++) {
-                if (bricks[row][col] != null) {
-                    Brick brick = (Brick) bricks[row][col];
-                    shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
-                    shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
-                }
+
+
+        Map map = new Map();
+        map.loadMapFromXML("map.xml");
+        int[][] brickDurability = map.getBrickDurability();
+        for (int i = 0; i < brickDurability.length; i++) {
+            for (int j = 0; j < brickDurability[0].length; j++) {
+                Brick brick = new Brick(j * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN, Gdx.graphics.getHeight() - (i + 1) * (BRICK_HEIGHT + BRICK_MARGIN), BRICK_WIDTH, BRICK_HEIGHT, brickDurability[i][j]);
+                bricks[i][j] = brick;
+                shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
+                shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
+
+
             }
         }
+
+//        // Affichage des briques
+//        for (int row = 0; row < BRICK_ROWS; row++) {
+//            for (int col = 0; col < BRICK_COLS; col++) {
+//                if (bricks[row][col] != null) {
+//                    Brick brick = (Brick) bricks[row][col];
+//                    shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
+//                    shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
+//                }
+//            }
+//        }
+
+//        for (int row = 0; row < BRICK_ROWS; row++) {
+//            for (int col = 0; col < BRICK_COLS; col++) {
+//                if (bricks[row][col] != null) {
+//                    Brick brick = (Brick) bricks[row][col];
+//                    shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
+//                    shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
+//                }
+//            }
+//        }
 
         shapeRenderer.end();
 
@@ -213,28 +231,27 @@ public class BbMain extends ApplicationAdapter {
             }
 
             // Check collision with bricks
-            for (int row = 0; row < BRICK_ROWS; row++) {
-                for (int col = 0; col < BRICK_COLS; col++) {
+            for (int row = 0; row < bricks.length; row++) {
+                for (int col = 0; col < bricks[0].length; col++) {
                     if (bricks[row][col] != null) {
                         Brick brick = (Brick) bricks[row][col];
-                        if (ball.position.x < brick.x + brick.width &&
-                                ball.position.x + 2 * BALL_RADIUS > brick.x &&
-                                ball.position.y < brick.y + brick.height &&
-                                ball.position.y + 2 * BALL_RADIUS > brick.y) {
+                        if (ball.position.x < brick.x + brick.width && ball.position.x + 2 * BALL_RADIUS > brick.x &&
+                                ball.position.y < brick.y + brick.height && ball.position.y + 2 * BALL_RADIUS > brick.y) {
 
-                            // Determine side of collision
-                            float ballCenterX = ball.position.x + BALL_RADIUS;
-                            float ballCenterY = ball.position.y + BALL_RADIUS;
-                            boolean isHorizontalCollision = Math.abs(ballCenterY - (brick.y + BRICK_HEIGHT / 2)) < BALL_RADIUS + BRICK_HEIGHT / 2;
-                            boolean isVerticalCollision = Math.abs(ballCenterX - (brick.x + BRICK_WIDTH / 2)) < BALL_RADIUS + BRICK_WIDTH / 2;
-
-                            if (isHorizontalCollision) {
-                                // Reverse vertical velocity
-                                ball.velocity.y *= -1;
-                            }
-                            if (isVerticalCollision) {
-                                // Reverse horizontal velocity
+                            // Détection de la collision
+                            if (ball.velocity.x > 0 && ball.position.x - BALL_RADIUS < brick.x) {
+                                // Collision avec le côté gauche de la brique
                                 ball.velocity.x *= -1;
+                            } else if (ball.velocity.x < 0 && ball.position.x + BALL_RADIUS > brick.x + brick.width) {
+                                // Collision avec le côté droit de la brique
+                                ball.velocity.x *= -1;
+                            }
+                            if (ball.velocity.y > 0 && ball.position.y - BALL_RADIUS < brick.y) {
+                                // Collision avec le côté supérieur de la brique
+                                ball.velocity.y *= -1;
+                            } else if (ball.velocity.y < 0 && ball.position.y + BALL_RADIUS > brick.y + brick.height) {
+                                // Collision avec le côté inférieur de la brique
+                                ball.velocity.y *= -1;
                             }
 
                             // Reduce durability
@@ -249,17 +266,18 @@ public class BbMain extends ApplicationAdapter {
                                 // Ajout d'un bonus
                                 // Exemple : augmentation de la taille de la raquette
                                 switch (random.nextInt(5)) {
-                                    case 1:
+                                    case 1: // Bonus pour augmenter la taille de la raquette
                                         paddle.width += 20;
                                         break;
-                                    case 2:
+                                    case 2: // Bonus pour réduire la taille de la raquette
                                         paddle.width -= 20;
                                         break;
-                                    case 3:
+                                    case 3: // Bonus pour augmenter la vitesse de la balle
                                         ball.velocity.x *= 1.5;
                                         ball.velocity.y *= 1.5;
+
                                         break;
-                                    case 4:
+                                    case 4: // Bonus pour réduire la vitesse de la balle
                                         ball.velocity.x *= 0.5;
                                         ball.velocity.y *= 0.5;
                                         break;

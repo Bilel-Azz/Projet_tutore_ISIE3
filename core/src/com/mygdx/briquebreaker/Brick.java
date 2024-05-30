@@ -42,8 +42,7 @@ public class Brick extends Rectangle {
 
     public Color getColor() {
         // Utilisation de la couleur correspondante à la durabilité actuelle
-        int index = Math.min(durability - 1, colors.length - 1);
-        return colors[index];
+        return colors[durability - 1];
     }
 
     public  int getBonus() {
