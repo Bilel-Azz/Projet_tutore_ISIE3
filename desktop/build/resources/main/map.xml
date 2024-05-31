@@ -1,14 +1,19 @@
 <map>
     <row>
         <brick>
-            <column>2</column> <!-- Durabilité de la brique 1 -->
+            <column>5</column> <!-- Durabilité de la brique 1 -->
             <column>3</column> <!-- Durabilité de la brique 2 -->
-            <column>1</column> <!-- Durabilité de la brique 3 -->
+            <column>0</column> <!-- Durabilité de la brique 3 -->
             <column>2</column> <!-- Durabilité de la brique 4 -->
             <column>1</column> <!-- Durabilité de la brique 4 -->
             <column>2</column> <!-- Durabilité de la brique 5 -->
             <column>1</column> <!-- Durabilité de la brique 6 -->
             <column>3</column> <!-- Durabilité de la brique 7 -->
+            <column>1</column> <!-- Durabilité de la brique 4 -->
+            <column>2</column> <!-- Durabilité de la brique 5 -->
+            <column>1</column> <!-- Durabilité de la brique 6 -->
+            <column>3</column> <!-- Durabilité de la brique 7 -->
+
 
         </brick>
     </row>
@@ -19,9 +24,12 @@
             <column>1</column> <!-- Durabilité de la brique 6 -->
             <column>3</column> <!-- Durabilité de la brique 7 -->
             <column>1</column> <!-- Durabilité de la brique 4 -->
-            <column>2</column> <!-- Durabilité de la brique 5 -->
+            <column>5</column> <!-- Durabilité de la brique 5 -->
             <column>1</column> <!-- Durabilité de la brique 6 -->
             <column>3</column> <!-- Durabilité de la brique 7 -->
+            <column>3</column> <!-- Durabilité de la brique 7 -->
+            <column>5</column> <!-- Durabilité de la brique 7 -->
+
 
         </brick>
     </row>
@@ -30,11 +38,12 @@
             <column>1</column> <!-- Durabilité de la brique 4 -->
             <column>2</column> <!-- Durabilité de la brique 5 -->
             <column>1</column> <!-- Durabilité de la brique 6 -->
-            <column>3</column> <!-- Durabilité de la brique 7 -->
+            <column>5</column> <!-- Durabilité de la brique 7 -->
             <column>1</column> <!-- Durabilité de la brique 4 -->
             <column>2</column> <!-- Durabilité de la brique 5 -->
             <column>1</column> <!-- Durabilité de la brique 6 -->
             <column>3</column> <!-- Durabilité de la brique 7 -->
+
         </brick>
     </row>
     <row>

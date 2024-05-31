@@ -10,6 +10,15 @@ import org.w3c.dom.NodeList;
 public class Map {
     private int[][] brickDurability;
 
+    public void printMap() {
+        for (int i = 0; i < brickDurability.length; i++) {
+            for (int j = 0; j < brickDurability[i].length; j++) {
+                System.out.print("{"+i+""+j+"} ");
+            }
+            System.out.println();
+        }
+    }
+
     public void loadMapFromXML(String filename) {
         try {
             File file = new File(filename);
@@ -18,43 +27,33 @@ public class Map {
             Document doc = dBuilder.parse(file);
             doc.getDocumentElement().normalize();
 
-            NodeList brickList = doc.getElementsByTagName("brick");
-            int numRows = brickList.getLength();
-            int numCols = ((Element) brickList.item(0)).getElementsByTagName("column").getLength();
-            brickDurability = new int[numRows][numCols];
+            NodeList rowList = doc.getElementsByTagName("row");
+            int numRows = rowList.getLength();
+            brickDurability = new int[numRows][];
 
             for (int i = 0; i < numRows; i++) {
-                Element rowElement = (Element) brickList.item(i);
-                NodeList columns = rowElement.getElementsByTagName("column");
+                Element rowElement = (Element) rowList.item(i);
+                NodeList brickList = rowElement.getElementsByTagName("brick");
+                Element brickElement = (Element) brickList.item(0);  // assuming one <brick> per <row>
+                NodeList columns = brickElement.getElementsByTagName("column");
+                int numCols = columns.getLength();
+                brickDurability[i] = new int[numCols];
                 for (int j = 0; j < numCols; j++) {
-                    Element columnElement = (Element) columns.item(j);
-                    brickDurability[i][j] = Integer.parseInt(columnElement.getTextContent());
+                    brickDurability[i][j] = Integer.parseInt(columns.item(j).getTextContent());
+                    System.out.print(brickDurability[i][j] + " ");
+
                 }
+                System.out.println();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+
     public int[][] getBrickDurability() {
         return brickDurability;
     }
 
-    // Exemple d'utilisation
-    public static void main(String[] args) {
-        Map map = new Map();
-        map.loadMapFromXML("map.xml");
 
-        int[][] brickDurability = map.getBrickDurability();
-        for (int i = 0; i < brickDurability.length; i++) {
-            for (int j = 0; j < brickDurability[0].length; j++) {
-                System.out.print(brickDurability[i][j] + " ");
-            }
-            System.out.println();
-        }
-    }
 }
-
-
-
-

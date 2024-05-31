@@ -56,6 +56,9 @@ public class BbMain extends ApplicationAdapter {
     private static final int BRICK_MARGIN = 5;
     private Rectangle[][] bricks;
 
+    private static final int MAP_WIDTH = 12;
+    private static final int MAP_HEIGHT = 12;
+
 
     @Override
     public void create () {
@@ -78,10 +81,29 @@ public class BbMain extends ApplicationAdapter {
         paddle = new Paddle((Gdx.graphics.getWidth() - PADDLE_WIDTH) / 2, 20, PADDLE_WIDTH, PADDLE_HEIGHT);
         Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
 
-        bricks = new Rectangle[10][10];
+        bricks = new Rectangle[MAP_HEIGHT][MAP_WIDTH];
+        initmap("map.xml");
 
     }
 
+    private void initmap(String filename) {
+        Map map = new Map();
+        map.loadMapFromXML(filename);
+        map.printMap();
+        int[][] brickDurability = map.getBrickDurability();
+        for (int i = 0; i < brickDurability.length; i++) {
+            for (int j = 0; j < brickDurability[i].length; j++) {
+                if (brickDurability[i][j] == 0) {
+                    continue;
+                }
+                Brick brick = new Brick(j * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN, Gdx.graphics.getHeight() - (i + 1) * (BRICK_HEIGHT + BRICK_MARGIN), BRICK_WIDTH, BRICK_HEIGHT, brickDurability[i][j]);
+                bricks[i][j] = brick;
+            }
+        }
+    }
+
+
+    
 
     @Override
     public void render() {
@@ -151,21 +173,18 @@ public class BbMain extends ApplicationAdapter {
             shapeRenderer.circle(ball.position.x, ball.position.y, BALL_RADIUS);
         }
 
-
-        Map map = new Map();
-        map.loadMapFromXML("map.xml");
-        int[][] brickDurability = map.getBrickDurability();
-        for (int i = 0; i < brickDurability.length; i++) {
-            for (int j = 0; j < brickDurability[0].length; j++) {
-                Brick brick = new Brick(j * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN, Gdx.graphics.getHeight() - (i + 1) * (BRICK_HEIGHT + BRICK_MARGIN), BRICK_WIDTH, BRICK_HEIGHT, brickDurability[i][j]);
-                bricks[i][j] = brick;
-                System.out.println("brickDurability[i][j] = " + brickDurability[i][j]);
-                shapeRenderer.setColor(brick.getColor()); // Utilisation de la couleur de la brique
-                shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
-
-
+        for (int row = 0; row < MAP_HEIGHT; row++) {
+            for (int col = 0; col < MAP_WIDTH; col++) {
+                if (bricks[row][col] != null) {
+                    Brick brick = (Brick) bricks[row][col];
+                    shapeRenderer.setColor(brick.getColor());
+                    shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
+                }
             }
         }
+
+
+
 
 
         shapeRenderer.end();
@@ -209,10 +228,6 @@ public class BbMain extends ApplicationAdapter {
             ball.position.y += ball.velocity.y;
 
 
-            // Update ball position
-            ball.position.x += ball.velocity.x;
-            ball.position.y += ball.velocity.y;
-
             // Vérifier la collision avec le paddle
             if (ball.position.y - BALL_RADIUS < paddle.y + paddle.height && ball.position.y + BALL_RADIUS > paddle.y &&
                     ball.position.x + BALL_RADIUS > paddle.x && ball.position.x - BALL_RADIUS < paddle.x + paddle.width) {
@@ -236,7 +251,7 @@ public class BbMain extends ApplicationAdapter {
                 ball.velocity.y *= -1;
             }
 
-            // Check collision with bottom of the screen
+            /*// Check collision with bottom of the screen
             if (ball.position.y - BALL_RADIUS < 0 && Balls.size() == 1) {
                 // Définir les informations pour la fin de partie
                 gameOverMessage = "Vous avez perdu";
@@ -246,16 +261,12 @@ public class BbMain extends ApplicationAdapter {
                 // Changer l'état du jeu en GAME_OVER
                 gameState = GameState.GAME_OVER;
 
-                // Réinitialiser les paramètres du jeu
-                score = 0; // Réinitialiser le score
-                ball.position.set(Gdx.graphics.getWidth() / 2, PADDLE_HEIGHT + BALL_RADIUS * 2); // Réinitialiser la position de la balle
-                ball.velocity.set(BALL_SPEED, BALL_SPEED); // Réinitialiser la vitesse de la balle
-                bricks = new Rectangle[BRICK_ROWS][BRICK_COLS]; // Réinitialiser les briques
-            }
+
+            }*/
 
             // Vérifier la collision avec les briques
-            for (int row = 0; row < BRICK_ROWS; row++) {
-                for (int col = 0; col < BRICK_COLS; col++) {
+            for (int row = 0; row < MAP_HEIGHT; row++) {
+                for (int col = 0; col < MAP_WIDTH; col++) {
                     if (bricks[row][col] != null) {
                         Brick brick = (Brick) bricks[row][col];
                         if (ball.position.x + BALL_RADIUS > brick.x && ball.position.x - BALL_RADIUS < brick.x + brick.width &&
@@ -288,7 +299,9 @@ public class BbMain extends ApplicationAdapter {
                             }
 
                             // Réduction de la durabilité de la brique et mise à jour du score
+                            System.out.println("brick.getDurability() = " + brick.getDurability());
                             brick.reduceDurability();
+                            System.out.println("brick.getDurability() = " + brick.getDurability());
                             if (brick.getDurability() <= 0) {
                                 bricks[row][col] = null;
                                 score += 10;
