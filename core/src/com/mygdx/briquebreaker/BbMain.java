@@ -1,5 +1,5 @@
 package com.mygdx.briquebreaker;
-
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -38,7 +38,7 @@ import java.security.PublicKey;
 public class BbMain extends ApplicationAdapter {
 
     // Déclarations de variables globales
-    private enum GameState {MENU, PLAYING, RULES, PARAM, GAME_OVER}
+    private enum GameState {MENU, PLAYING, GAME_OVER, RULES, PARAM}
 
     private GameState gameState;
     private BitmapFont menuFont;
@@ -54,7 +54,7 @@ public class BbMain extends ApplicationAdapter {
 
     private List<Ball> Balls;
 
-
+    private String[] menuMode;
     private String[] menuParam;
     private String[] menuRules;
     private String DrawRules = "Le joueur déplace la raquette de droite à gauche pour empêcher la balle de tomber dans la zone en dessous";
@@ -117,11 +117,14 @@ public class BbMain extends ApplicationAdapter {
         drawMessage = new BitmapFont();
         drawMessage.setColor(Color.WHITE);
         selectedMenuItem = 0;
-        menuItems = new String[]{"Start Game", "Param", "Rules", "Exit"};
+        menuItems = new String[]{"Start Game","Mode", "Param", "Rules", "Exit"};
         menuRules = new String[]{"Start Game", "Return Last Menu", "Exit"};
         menuParam = new String[]{"Music Sound","Sound Effect", "Paddle size", "Ball Speed", "Main menu"};
+        menuMode = new String[]{"Level 1", "Level 2", "Level 3", "Main menu"};
+        Gdx.graphics.setWindowedMode(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
         batch = new SpriteBatch();
         shapeRenderer = new ShapeRenderer();
         font = new BitmapFont();
@@ -133,9 +136,11 @@ public class BbMain extends ApplicationAdapter {
         Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
 
         bricks = new Rectangle[MAP_HEIGHT][MAP_WIDTH];
-        initmap("map.xml");
+
 
     }
+
+
 
     private void initmap(String filename) {
         Map map = new Map();
@@ -170,6 +175,7 @@ public class BbMain extends ApplicationAdapter {
                 break;
             case PLAYING:
                 //CreateComponent();
+                initmap("map.xml");
                 renderGame();
                 break;
             case GAME_OVER:
@@ -267,6 +273,47 @@ public class BbMain extends ApplicationAdapter {
                     break;
             }
         }
+    }
+
+
+    public void renderMode (){
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        batch.begin();
+        for (int i = 0; i < menuMode.length; i++) {
+            if (i == selectedMenuItem) {
+                menuFont.setColor(Color.RED);
+            } else {
+                menuFont.setColor(Color.WHITE);
+            }
+            menuFont.draw(batch, menuMode[i], 100, 400 - i * 50);
+        }
+        batch.end();
+        if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
+            selectedMenuItem = Math.max(0, selectedMenuItem - 1);
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
+            selectedMenuItem = Math.min(menuMode.length - 1, selectedMenuItem + 1);
+        } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            switch (selectedMenuItem) {
+                case 0:
+                    initmap("map.xml");
+                    gameState = GameState.PLAYING;
+                    break;
+                case 1:
+                    initmap("map2.xml");
+                    gameState = GameState.PLAYING;
+                    break;
+                case 2:
+                    initmap("map3.xml");
+                    gameState = GameState.PLAYING;
+                    break;
+                case 3:
+                    this.selectedMenuItem = 0;
+                    gameState = GameState.MENU;
+                    break;
+            }
+        }
+
     }
     public void SetSoundEffect(){
         if (soundEffect == false){
