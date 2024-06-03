@@ -118,10 +118,14 @@ public class BbMain extends ApplicationAdapter {
     Sound collisionSound;
 
     private Texture menuBackgroundTexture;
+    private Texture rulesBackgroundTexture;
+
 
     @Override
     public void create() {
-        menuBackgroundTexture = new Texture(Gdx.files.internal("wallpaper.jpg"));
+        rulesBackgroundTexture = new Texture(Gdx.files.internal("rules.png")); // Ajoutez cette ligne
+
+        menuBackgroundTexture = new Texture(Gdx.files.internal("menu.png"));
 
         // Initialisation des textures
         ballTexture = new Texture(Gdx.files.internal("balle.png"));
@@ -137,7 +141,7 @@ public class BbMain extends ApplicationAdapter {
         drawMessage.setColor(Color.WHITE);
         selectedMenuItem = 0;
         menuItems = new String[]{"Start Game", "Param", "Rules","Mode", "High Scores", "Exit"};
-        menuRules = new String[]{"Start Game", "Return Last Menu", "Exit"};
+        menuRules = new String[]{"Return Last Menu"};
         menuParam = new String[]{"Music Sound", "Sound Effect", "Paddle size", "Ball Speed", "Main menu"};
         menuMode = new String[]{"Level 1", "Level 2", "Level 3", "Main menu"};
         menuHighScores = new String[]{"Return to Menu"};
@@ -382,7 +386,13 @@ public class BbMain extends ApplicationAdapter {
         // Affichage des Regles
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         batch.begin();
+
+        // Dessiner le fond d'écran des règles
+        batch.draw(rulesBackgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        // Dessiner les éléments du menu
         for (int i = 0; i < menuRules.length; i++) {
             if (i == selectedMenuItem) {
                 menuFont.setColor(Color.RED);
@@ -391,9 +401,9 @@ public class BbMain extends ApplicationAdapter {
             }
             menuFont.draw(batch, menuRules[i], 100, 200 - i * 50);
         }
-        drawMessage.draw(batch, DrawRules, 10, 470);
-        drawMessage.draw(batch, DrawRules1, 10, 450);
+
         batch.end();
+
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
             selectedMenuItem = Math.max(0, selectedMenuItem - 1);
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) {
@@ -401,14 +411,8 @@ public class BbMain extends ApplicationAdapter {
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             switch (selectedMenuItem) {
                 case 0:
-                    gameState = GameState.PLAYING;
-                    break;
-                case 1:
                     this.selectedMenuItem = 0;
                     gameState = GameState.MENU;
-                    break;
-                case 2:
-                    Gdx.app.exit();
                     break;
             }
         }
@@ -661,5 +665,8 @@ public class BbMain extends ApplicationAdapter {
         paddleTexture.dispose();
         backgroundTexture.dispose();
         brickTexture.dispose();
+        menuBackgroundTexture.dispose();
+        rulesBackgroundTexture.dispose(); // Ajoutez cette ligne
     }
+
 }

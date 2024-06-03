@@ -1,5 +1,5 @@
 buildscript {
-    
+
 
     repositories {
         mavenLocal()
@@ -12,13 +12,13 @@ buildscript {
         classpath 'org.docstr:gwt-gradle-plugin:1.1.29'
         classpath 'org.gretty:gretty:3.1.0'
         classpath 'com.mobidevelop.robovm:robovm-gradle-plugin:2.3.20'
-        
-
+        classpath 'edu.sc.seis.launch4j:launch4j:2.4.9'
     }
 }
 
 allprojects {
     apply plugin: "eclipse"
+    apply plugin: 'edu.sc.seis.launch4j'
 
     version = '1.0'
     ext {
@@ -45,14 +45,20 @@ allprojects {
 project(":desktop") {
     apply plugin: "java-library"
 
-
     dependencies {
         implementation project(":core")
         api "com.badlogicgames.gdx:gdx-backend-lwjgl3:$gdxVersion"
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         api "com.badlogicgames.gdx-controllers:gdx-controllers-desktop:$gdxControllersVersion"
         api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
-        
+    }
+
+    launch4j {
+        mainClassName = 'com.mygdx.briquebreaker.BbMain' // Assurez-vous que cette classe existe
+        jar = "${projectDir}/build/libs/desktop-1.0.jar" // Assurez-vous que ce JAR est généré
+        outfile = "${projectDir}/build/libs/BriqueBreaker.exe" // Chemin de sortie de l'exécutable
+        icon = 'path/to/your/icon.ico' // Facultatif, mais assurez-vous que le chemin est correct si utilisé
+        jreMinVersion = '1.8.0'
     }
 }
 
@@ -69,7 +75,7 @@ project(":ios") {
         api "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios"
         api "com.badlogicgames.gdx-controllers:gdx-controllers-ios:$gdxControllersVersion"
         api "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-ios"
-        
+
     }
 }
 
@@ -94,7 +100,7 @@ project(":html") {
         api "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion:sources"
         api "com.badlogicgames.ashley:ashley:$ashleyVersion:sources"
         api "com.badlogicgames.gdx:gdx-ai:$aiVersion:sources"
-        
+
     }
 }
 
@@ -110,6 +116,6 @@ project(":core") {
         api "com.badlogicgames.box2dlights:box2dlights:$box2DLightsVersion"
         api "com.badlogicgames.ashley:ashley:$ashleyVersion"
         api "com.badlogicgames.gdx:gdx-ai:$aiVersion"
-        
+
     }
 }
