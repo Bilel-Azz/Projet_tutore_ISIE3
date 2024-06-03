@@ -62,6 +62,7 @@ public class BbMain extends ApplicationAdapter {
 
     private String gameOverMessage;
     private int gameOverScore;
+    private long gameOverTime;
     private String gameOverButton;
 
     private List<Ball> Balls;
@@ -118,8 +119,8 @@ public class BbMain extends ApplicationAdapter {
     public boolean soundEffect = true;
     private String paddleSize = "Medium";
     private String ballSpeed = "Medium";
-    Music backgroundMusic;
-    Sound collisionSound;
+    private Music backgroundMusic;
+    private Sound collisionSound;
 
     private Texture menuBackgroundTexture;
     private Texture rulesBackgroundTexture;
@@ -134,7 +135,7 @@ public class BbMain extends ApplicationAdapter {
         // Initialisation des textures
         ballTexture = new Texture(Gdx.files.internal("balle.png"));
         paddleTexture = new Texture(Gdx.files.internal("paddle.png"));
-        backgroundTexture = new Texture(Gdx.files.internal("wallpaper.jpg"));
+        backgroundTexture = new Texture(Gdx.files.internal("wallpaper2.png"));
         brickTexture = new Texture(Gdx.files.internal("brick.png"));
 
         // Initialisation des variables de menu
@@ -185,6 +186,16 @@ public class BbMain extends ApplicationAdapter {
                 map3.get(i).add(5);
             }
         }
+
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
+
+        // Configurer la musique pour qu'elle boucle en continu
+        backgroundMusic.setLooping(true);
+
+        // Démarrer la lecture de la musique
+        backgroundMusic.play();
+        // Charger le bruitage de collision
+        collisionSound = Gdx.audio.newSound(Gdx.files.internal("bruitage.mp3"));
     }
 
 
@@ -201,15 +212,7 @@ public class BbMain extends ApplicationAdapter {
 
 
 
-        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
 
-        // Configurer la musique pour qu'elle boucle en continu
-        backgroundMusic.setLooping(true);
-
-        // Démarrer la lecture de la musique
-        backgroundMusic.play();
-        // Charger le bruitage de collision
-        collisionSound = Gdx.audio.newSound(Gdx.files.internal("bruitage.mp3"));
     }
 
 
@@ -645,11 +648,7 @@ public class BbMain extends ApplicationAdapter {
                 // Changer l'état du jeu en GAME_OVER
                 gameState = GameState.GAME_OVER;
 
-                // faire un render mode lorsque le bouton est cliqué
-                if (restartButtonClicked) {
-                    gameState = GameState.MODE;
-                    restartButtonClicked = false;
-                }
+
 
 
             }
