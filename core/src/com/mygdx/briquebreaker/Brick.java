@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.Color;
 
 import static com.badlogic.gdx.math.MathUtils.random;
 
-
 public class Brick extends Rectangle {
     private int durability;
     private int bonus;
@@ -14,41 +13,36 @@ public class Brick extends Rectangle {
     public Brick(float x, float y, float width, float height, int durability) {
         super(x, y, width, height);
         this.durability = durability;
-                // Génération aléatoire d'un bonus avec une chance de 1/10
+
+        // Génération aléatoire d'un bonus avec une chance de 1/10
         if (random.nextInt(10) == 0) {
-            this.bonus = 1; //
+            this.bonus = 1;
         } else {
             this.bonus = 0;
         }
 
         // Initialisation des couleurs en fonction de la durabilité
-        colors = new Color[] {
+        colors = new Color[]{
                 Color.RED,      // Durabilité = 1
                 Color.ORANGE,   // Durabilité = 2
                 Color.YELLOW,   // Durabilité = 3
                 Color.GREEN,    // Durabilité = 4
                 Color.BLUE      // Durabilité = 5 (et au-delà)
         };
-
-    }
-
-    public int getDurability() {
-        return durability;
     }
 
     public void reduceDurability() {
         durability--;
     }
 
+    public int getDurability() {
+        return durability;
+    }
+
     public Color getColor() {
-        // Utilisation de la couleur correspondante à la durabilité actuelle
-        return colors[durability - 1];
+        if (durability > 0 && durability <= colors.length) {
+            return colors[durability - 1];
+        }
+        return Color.WHITE;
     }
-
-    public  int getBonus() {
-        return this.bonus;
-
-    }
-
-
 }

@@ -3,9 +3,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -25,6 +23,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.utils.TimeUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,16 @@ import java.security.PublicKey;
 public class BbMain extends ApplicationAdapter {
 
     // Déclarations de variables globales
-    private enum GameState {MENU, PLAYING, GAME_OVER, RULES, PARAM}
+    private enum GameState {MENU, PLAYING, GAME_OVER, RULES, PARAM, HIGH_SCORES}
+
+    private long startTime;
+    private BitmapFont timeFont;
+
+    private Texture ballTexture;
+    private Texture paddleTexture;
+    private Texture backgroundTexture;
+
+    private Texture brickTexture;
 
     private GameState gameState;
     private BitmapFont menuFont;
@@ -54,6 +62,7 @@ public class BbMain extends ApplicationAdapter {
 
     private List<Ball> Balls;
 
+    private String[] menuHighScores;
     private String[] menuMode;
     private String[] menuParam;
     private String[] menuRules;
@@ -108,8 +117,18 @@ public class BbMain extends ApplicationAdapter {
     Music backgroundMusic;
     Sound collisionSound;
 
+    private Texture menuBackgroundTexture;
+
     @Override
     public void create() {
+        menuBackgroundTexture = new Texture(Gdx.files.internal("wallpaper.jpg"));
+
+        // Initialisation des textures
+        ballTexture = new Texture(Gdx.files.internal("balle.png"));
+        paddleTexture = new Texture(Gdx.files.internal("paddle.png"));
+        backgroundTexture = new Texture(Gdx.files.internal("wallpaper.jpg"));
+        brickTexture = new Texture(Gdx.files.internal("brick.png"));
+
         // Initialisation des variables de menu
         gameState = GameState.MENU;
         menuFont = new BitmapFont();
@@ -117,10 +136,11 @@ public class BbMain extends ApplicationAdapter {
         drawMessage = new BitmapFont();
         drawMessage.setColor(Color.WHITE);
         selectedMenuItem = 0;
-        menuItems = new String[]{"Start Game","Mode", "Param", "Rules", "Exit"};
+        menuItems = new String[]{"Start Game", "Mode", "Param", "Rules", "High Scores", "Exit"};
         menuRules = new String[]{"Start Game", "Return Last Menu", "Exit"};
-        menuParam = new String[]{"Music Sound","Sound Effect", "Paddle size", "Ball Speed", "Main menu"};
+        menuParam = new String[]{"Music Sound", "Sound Effect", "Paddle size", "Ball Speed", "Main menu"};
         menuMode = new String[]{"Level 1", "Level 2", "Level 3", "Main menu"};
+        menuHighScores = new String[]{"Return to Menu"};
         Gdx.graphics.setWindowedMode(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera = new OrthographicCamera();
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -137,7 +157,10 @@ public class BbMain extends ApplicationAdapter {
 
         bricks = new Rectangle[MAP_HEIGHT][MAP_WIDTH];
 
+        initmap("map.xml");
 
+        timeFont = new BitmapFont();
+        timeFont.setColor(Color.WHITE);
     }
 
 
@@ -175,19 +198,27 @@ public class BbMain extends ApplicationAdapter {
                 break;
             case PLAYING:
                 //CreateComponent();
-                initmap("map.xml");
+                if (startTime == 0) {
+                    startTime = TimeUtils.nanoTime();
+                }
                 renderGame();
                 break;
             case GAME_OVER:
                 renderGameOver();
+                break;
             case RULES:
                 renderRules();
                 break;
             case PARAM:
                 renderParam();
                 break;
+            case HIGH_SCORES:
+                // Ajouter l'appel à renderMode() lorsque le jeu est en mode
+                renderMode();
+                break;
         }
     }
+
 
     public void renderParam(){
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -381,10 +412,15 @@ public class BbMain extends ApplicationAdapter {
     }
 
     private void renderMenu() {
-        // Affichage du menu
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         batch.begin();
+
+        // Dessiner le fond d'écran du menu
+        batch.draw(menuBackgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+        // Dessiner les éléments du menu
         for (int i = 0; i < menuItems.length; i++) {
             if (i == selectedMenuItem) {
                 menuFont.setColor(Color.RED);
@@ -393,7 +429,9 @@ public class BbMain extends ApplicationAdapter {
             }
             menuFont.draw(batch, menuItems[i], 100, 400 - i * 50);
         }
+
         batch.end();
+
         // Gestion des entrées du clavier pour naviguer dans le menu
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) {
             selectedMenuItem = Math.max(0, selectedMenuItem - 1);
@@ -408,14 +446,12 @@ public class BbMain extends ApplicationAdapter {
                     this.selectedMenuItem = 0;
                     gameState = GameState.PARAM;
                     break;
-
                 case 2:
                     gameState = GameState.RULES;
                     break;
                 case 3:
                     Gdx.app.exit();
                     break;
-
             }
         }
     }
@@ -427,34 +463,48 @@ public class BbMain extends ApplicationAdapter {
         update();
         camera.update();
         batch.setProjectionMatrix(camera.combined);
-        shapeRenderer.setProjectionMatrix(camera.combined);
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(paddle.x, paddle.y, paddle.width, paddle.height);
 
+        // Temps écoulé
+        long elapsedTime = (TimeUtils.nanoTime() - startTime) / 1000000000;
+        int minutes = (int) (elapsedTime / 60);
+        int seconds = (int) (elapsedTime % 60);
+
+        // Dessiner le fond d'écran
+        batch.begin();
+        batch.draw(backgroundTexture, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batch.end();
+
+        batch.begin();
+
+        // Dessiner le paddle
+        batch.draw(paddleTexture, paddle.x, paddle.y, paddle.width, paddle.height);
+
+        // Dessiner la balle
         for (Ball ball : Balls) {
-            shapeRenderer.circle(ball.position.x, ball.position.y, BALL_RADIUS);
+            batch.draw(ballTexture, ball.position.x - BALL_RADIUS, ball.position.y - BALL_RADIUS, BALL_RADIUS * 2, BALL_RADIUS * 2);
         }
 
+        // Dessiner les briques
         for (int row = 0; row < MAP_HEIGHT; row++) {
             for (int col = 0; col < MAP_WIDTH; col++) {
                 if (bricks[row][col] != null) {
                     Brick brick = (Brick) bricks[row][col];
-                    shapeRenderer.setColor(brick.getColor());
-                    shapeRenderer.rect(brick.x, brick.y, brick.width, brick.height);
+                    // Utiliser une couleur différente en fonction de la durabilité
+                    batch.setColor(brick.getColor());
+                    batch.draw(brickTexture, brick.x, brick.y, brick.width, brick.height);
                 }
             }
         }
 
+        batch.setColor(Color.WHITE); // Réinitialiser la couleur après avoir dessiné les briques colorées
 
-
-
-
-        shapeRenderer.end();
-        batch.begin();
+        // Afficher le score
         font.draw(batch, "Score: " + score, 20, Gdx.graphics.getHeight() - 20);
+        timeFont.draw(batch, String.format("Time: %02d:%02d", minutes, seconds), 20, Gdx.graphics.getHeight() - 40);
         batch.end();
     }
+
+
 
     private void renderGameOver() {
         Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -467,7 +517,12 @@ public class BbMain extends ApplicationAdapter {
         font.draw(batch, "Score: " + gameOverScore, Gdx.graphics.getWidth() / 2 - 100, Gdx.graphics.getHeight() / 2);
 
         batch.end();
+        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+            gameState = GameState.MENU;
+            startTime = 0; // Réinitialiser le temps
+        }
     }
+
 
 
     private void handleInput() {
@@ -587,5 +642,11 @@ public class BbMain extends ApplicationAdapter {
         backgroundMusic.stop();
         backgroundMusic.dispose();
         collisionSound.dispose();
+
+        // Libérer les textures
+        ballTexture.dispose();
+        paddleTexture.dispose();
+        backgroundTexture.dispose();
+        brickTexture.dispose();
     }
 }
