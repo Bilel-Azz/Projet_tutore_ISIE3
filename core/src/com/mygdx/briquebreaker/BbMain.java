@@ -39,6 +39,10 @@ public class BbMain extends ApplicationAdapter {
     // Déclarations de variables globales
     private enum GameState {MENU, PLAYING, GAME_OVER, RULES, PARAM, HIGH_SCORES,MODE}
 
+    private ArrayList<ArrayList<Integer>> map1;
+    private ArrayList<ArrayList<Integer>> map2;
+    private ArrayList<ArrayList<Integer>> map3;
+
     private long startTime;
     private BitmapFont timeFont;
 
@@ -87,7 +91,7 @@ public class BbMain extends ApplicationAdapter {
 
 
     private static final int MAP_WIDTH = 12;
-    private static final int MAP_HEIGHT = 12;
+    private static final int MAP_HEIGHT = 5;
 
     public int BALL_SPEED = 5;
 
@@ -140,7 +144,7 @@ public class BbMain extends ApplicationAdapter {
         drawMessage = new BitmapFont();
         drawMessage.setColor(Color.WHITE);
         selectedMenuItem = 0;
-        menuItems = new String[]{"Start Game", "Param", "Rules","Mode", "High Scores", "Exit"};
+        menuItems = new String[]{"Start Game", "Param", "Rules", "Mode", "High Scores", "Exit"};
         menuRules = new String[]{"Return Last Menu"};
         menuParam = new String[]{"Music Sound", "Sound Effect", "Paddle size", "Ball Speed", "Main menu"};
         menuMode = new String[]{"Level 1", "Level 2", "Level 3", "Main menu"};
@@ -162,10 +166,58 @@ public class BbMain extends ApplicationAdapter {
         bricks = new Rectangle[MAP_HEIGHT][MAP_WIDTH];
 
 
-
         timeFont = new BitmapFont();
         timeFont.setColor(Color.WHITE);
+
+        // Initialiser les maps
+        map1 = new ArrayList<ArrayList<Integer>>();
+        map2 = new ArrayList<ArrayList<Integer>>();
+        map3 = new ArrayList<ArrayList<Integer>>();
+
+        for (int i = 0; i < MAP_HEIGHT; i++) {
+            map1.add(new ArrayList<Integer>());
+            map2.add(new ArrayList<Integer>());
+            map3.add(new ArrayList<Integer>());
+
+            for (int j = 0; j < MAP_WIDTH; j++) {
+                map1.get(i).add(1);
+                map2.get(i).add(3);
+                map3.get(i).add(5);
+            }
+        }
     }
+
+
+    private void initmap(ArrayList<ArrayList<Integer>> map) {
+        for (int i = 0; i < map.size(); i++) {
+            for (int j = 0; j < map.get(i).size(); j++) {
+                if (map.get(i).get(j) == 0) {
+                    continue;
+                }
+                Brick brick = new Brick(j * (BRICK_WIDTH + BRICK_MARGIN) + BRICK_MARGIN, Gdx.graphics.getHeight() - (i + 1) * (BRICK_HEIGHT + BRICK_MARGIN), BRICK_WIDTH, BRICK_HEIGHT, map.get(i).get(j));
+                bricks[i][j] = brick;
+            }
+        }
+
+
+
+        backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
+
+        // Configurer la musique pour qu'elle boucle en continu
+        backgroundMusic.setLooping(true);
+
+        // Démarrer la lecture de la musique
+        backgroundMusic.play();
+        // Charger le bruitage de collision
+        collisionSound = Gdx.audio.newSound(Gdx.files.internal("bruitage.mp3"));
+    }
+
+
+
+
+
+
+
 
 
 
@@ -193,6 +245,10 @@ public class BbMain extends ApplicationAdapter {
         // Charger le bruitage de collision
         collisionSound = Gdx.audio.newSound(Gdx.files.internal("bruitage.mp3"));
     }
+
+
+
+
     @Override
     public void render() {
         // Gestion de l'affichage en fonction de l'état du jeu
@@ -334,15 +390,15 @@ public class BbMain extends ApplicationAdapter {
         } else if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
             switch (selectedMenuItem) {
                 case 0:
-                    initmap("map.xml");
+                    initmap(map1);
                     gameState = GameState.PLAYING;
                     break;
                 case 1:
-                    initmap("map2.xml");
+                    initmap(map2);
                     gameState = GameState.PLAYING;
                     break;
                 case 2:
-                    initmap("map3.xml");
+                    initmap(map3);
                     gameState = GameState.PLAYING;
                     break;
                 case 3:
