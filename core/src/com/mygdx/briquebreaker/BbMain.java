@@ -37,7 +37,7 @@ import java.security.PublicKey;
 public class BbMain extends ApplicationAdapter {
 
     // Déclarations de variables globales
-    private enum GameState {MENU, PLAYING, GAME_OVER, RULES, PARAM, HIGH_SCORES}
+    private enum GameState {MENU, PLAYING, GAME_OVER, RULES, PARAM, HIGH_SCORES,MODE}
 
     private long startTime;
     private BitmapFont timeFont;
@@ -136,7 +136,7 @@ public class BbMain extends ApplicationAdapter {
         drawMessage = new BitmapFont();
         drawMessage.setColor(Color.WHITE);
         selectedMenuItem = 0;
-        menuItems = new String[]{"Start Game", "Mode", "Param", "Rules", "High Scores", "Exit"};
+        menuItems = new String[]{"Start Game", "Param", "Rules","Mode", "High Scores", "Exit"};
         menuRules = new String[]{"Start Game", "Return Last Menu", "Exit"};
         menuParam = new String[]{"Music Sound", "Sound Effect", "Paddle size", "Ball Speed", "Main menu"};
         menuMode = new String[]{"Level 1", "Level 2", "Level 3", "Main menu"};
@@ -157,7 +157,7 @@ public class BbMain extends ApplicationAdapter {
 
         bricks = new Rectangle[MAP_HEIGHT][MAP_WIDTH];
 
-        initmap("map.xml");
+
 
         timeFont = new BitmapFont();
         timeFont.setColor(Color.WHITE);
@@ -214,6 +214,9 @@ public class BbMain extends ApplicationAdapter {
                 break;
             case HIGH_SCORES:
                 // Ajouter l'appel à renderMode() lorsque le jeu est en mode
+                renderMode();
+                break;
+            case MODE:
                 renderMode();
                 break;
         }
@@ -450,8 +453,12 @@ public class BbMain extends ApplicationAdapter {
                     gameState = GameState.RULES;
                     break;
                 case 3:
+                    gameState = GameState.HIGH_SCORES;
+                    break;
+                case 4:
                     Gdx.app.exit();
                     break;
+
             }
         }
     }
@@ -568,7 +575,7 @@ public class BbMain extends ApplicationAdapter {
                 ball.velocity.y *= -1;
             }
 
-            /*// Check collision with bottom of the screen
+            // Check collision with bottom of the screen
             if (ball.position.y - BALL_RADIUS < 0 && Balls.size() == 1) {
                 // Définir les informations pour la fin de partie
                 gameOverMessage = "Vous avez perdu";
@@ -578,8 +585,14 @@ public class BbMain extends ApplicationAdapter {
                 // Changer l'état du jeu en GAME_OVER
                 gameState = GameState.GAME_OVER;
 
+                // faire un render mode lorsque le bouton est cliqué
+                if (restartButtonClicked) {
+                    gameState = GameState.MODE;
+                    restartButtonClicked = false;
+                }
 
-            }*/
+
+            }
 
             // Vérifier la collision avec les briques
             for (int row = 0; row < MAP_HEIGHT; row++) {
