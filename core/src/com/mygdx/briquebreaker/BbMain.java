@@ -161,8 +161,6 @@ public class BbMain extends ApplicationAdapter {
 
         Balls = new ArrayList<Ball>();
 
-        paddle = new Paddle((Gdx.graphics.getWidth() - PADDLE_WIDTH) / 2, 20, PADDLE_WIDTH, PADDLE_HEIGHT);
-        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
 
         bricks = new Rectangle[MAP_HEIGHT][MAP_WIDTH];
 
@@ -209,6 +207,9 @@ public class BbMain extends ApplicationAdapter {
                 bricks[i][j] = brick;
             }
         }
+
+        paddle = new Paddle((Gdx.graphics.getWidth() - PADDLE_WIDTH) / 2, 20, PADDLE_WIDTH, PADDLE_HEIGHT);
+        Balls.add(new Ball(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, BALL_SPEED, BALL_SPEED));
 
 
 
@@ -582,9 +583,11 @@ public class BbMain extends ApplicationAdapter {
 
         batch.begin();
 
+
         // Afficher le message de fin de partie
         font.draw(batch, "Vous avez perdu", Gdx.graphics.getWidth() / 2 - 100, Gdx.graphics.getHeight() / 2 + 50);
         font.draw(batch, "Score: " + gameOverScore, Gdx.graphics.getWidth() / 2 - 100, Gdx.graphics.getHeight() / 2);
+        font.draw(batch, "Temps: " + gameOverTime + " secondes", Gdx.graphics.getWidth() / 2 - 100, Gdx.graphics.getHeight() / 2 - 50);
 
         batch.end();
         if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
@@ -642,12 +645,13 @@ public class BbMain extends ApplicationAdapter {
             if (ball.position.y - BALL_RADIUS < 0 && Balls.size() == 1) {
                 // Définir les informations pour la fin de partie
                 gameOverMessage = "Vous avez perdu";
+                gameOverTime = (TimeUtils.nanoTime() - startTime) / 1000000000;
                 gameOverScore = score;
                 gameOverButton = "Relancer la partie";
 
+
                 // Changer l'état du jeu en GAME_OVER
                 gameState = GameState.GAME_OVER;
-
 
 
 
